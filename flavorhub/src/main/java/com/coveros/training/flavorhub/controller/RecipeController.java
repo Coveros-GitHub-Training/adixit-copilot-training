@@ -99,8 +99,10 @@ public class RecipeController {
             Recipe updatedRecipe = recipeService.addRating(id, ratingRequest.getRating());
             return ResponseEntity.ok(updatedRecipe);
         } catch (IllegalArgumentException e) {
+            // Rating validation failed (not between 1-5)
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
+            // Recipe not found
             return ResponseEntity.notFound().build();
         }
     }

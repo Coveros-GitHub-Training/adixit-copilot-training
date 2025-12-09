@@ -192,27 +192,24 @@
             margin-bottom: 10px;
         }
         
-        .rating-section {
+        /* Rating styles */
+        .recipe-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #e0e0e0;
         }
         
-        .rating-display {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        
         .stars {
             display: inline-flex;
             gap: 2px;
-            font-size: 1.2em;
         }
         
         .star {
             color: #ddd;
+            font-size: 1.2em;
         }
         
         .star.filled {
@@ -225,33 +222,44 @@
         }
         
         .rate-button {
-            display: inline-block;
             padding: 6px 12px;
-            background: #f8f9fa;
-            border: 1px solid #667eea;
-            color: #667eea;
-            text-decoration: none;
+            background: #667eea;
+            color: white;
+            border: none;
             border-radius: 5px;
-            font-size: 0.85em;
             cursor: pointer;
-            transition: all 0.3s;
+            font-size: 0.85em;
+            transition: background 0.3s;
+            margin-left: auto;
         }
         
         .rate-button:hover {
-            background: #667eea;
-            color: white;
+            background: #5568d3;
         }
         
+        /* Rating widget styles */
         .rating-widget {
             display: none;
             margin-top: 10px;
             padding: 15px;
-            background: #f8f9fa;
+            background: #f0f4ff;
             border-radius: 5px;
+            animation: slideDown 0.3s ease;
         }
         
         .rating-widget.active {
             display: block;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .rating-widget-title {
@@ -260,29 +268,150 @@
             color: #666;
         }
         
-        .rating-stars {
+        .interactive-stars {
             display: flex;
             gap: 8px;
             margin-bottom: 10px;
         }
         
-        .rating-star {
+        .interactive-star {
             font-size: 2em;
             cursor: pointer;
             color: #ddd;
             transition: color 0.2s;
         }
         
-        .rating-star:hover,
-        .rating-star.hover {
+        .interactive-star:hover,
+        .interactive-star.hover {
             color: #667eea;
         }
         
-        .rating-star.selected {
+        .interactive-star.selected {
             color: #667eea;
+        }
+        
+        .star.filled {
+            color: #ffc107;
+        }
+        
+        .rating-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .submit-rating,
+        .cancel-rating {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+        
+        .submit-rating {
+            background: #667eea;
+            color: white;
+        }
+        
+        .submit-rating:hover:not(:disabled) {
+            background: #5568d3;
+        }
+        
+        .submit-rating:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .cancel-rating {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .cancel-rating:hover {
+            background: #e9ecef;
         }
         
         @media (max-width: 768px) {
+        
+        .rating-widget-title {
+            font-size: 0.9em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .interactive-stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .interactive-star {
+            font-size: 2em;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .interactive-star:hover,
+        .interactive-star.hover {
+            color: #667eea;
+            transform: scale(1.1);
+        }
+        
+        .interactive-star.selected {
+            color: #667eea;
+        }
+        
+        .rating-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .submit-rating {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+        
+        .submit-rating:hover {
+            background: #5568d3;
+        }
+        
+        .submit-rating:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .cancel-rating {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            color: #666;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+        
+        .cancel-rating:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+            
             .filters {
                 flex-direction: column;
             }
@@ -291,9 +420,13 @@
                 min-width: 100%;
             }
             
-            .rating-display {
+            .recipe-rating {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+            
+            .interactive-star {
+                font-size: 1.5em;
             }
         }
     </style>
@@ -346,28 +479,36 @@
     </div>
     
     <script>
-        let recipes = [];
+        let allRecipes = [];
         
-        // Fetch recipes from API
+        // Fetch recipes from API on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchRecipes();
+            
+            // Add event listeners for filters
+            document.getElementById('difficulty').addEventListener('change', filterRecipes);
+            document.getElementById('cuisine').addEventListener('change', filterRecipes);
+            document.getElementById('search').addEventListener('input', filterRecipes);
+        });
+        
         async function fetchRecipes() {
             try {
                 const response = await fetch('/api/recipes');
                 if (!response.ok) {
                     throw new Error('Failed to fetch recipes');
                 }
-                recipes = await response.json();
-                displayRecipes(recipes);
+                allRecipes = await response.json();
+                displayRecipes(allRecipes);
             } catch (error) {
                 console.error('Error loading recipes:', error);
-                showErrorMessage('Unable to load recipes. Please try again.');
+                showError('Unable to load recipes. Please try again.');
             }
         }
         
-        // Display recipes in the grid
-        function displayRecipes(recipesToDisplay) {
+        function displayRecipes(recipes) {
             const grid = document.getElementById('recipesGrid');
             
-            if (recipesToDisplay.length === 0) {
+            if (recipes.length === 0) {
                 grid.innerHTML = `
                     <div class="no-recipes">
                         <h2>No Recipes Found</h2>
@@ -377,76 +518,136 @@
                 return;
             }
             
-            grid.innerHTML = recipesToDisplay.map(recipe => `
-                <div class="recipe-card">
+            grid.innerHTML = recipes.map(recipe => createRecipeCard(recipe)).join('');
+            
+            // Add event listeners to rate buttons
+            document.querySelectorAll('.rate-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const recipeId = this.dataset.recipeId;
+                    showRatingWidget(recipeId);
+                });
+            });
+        }
+        
+        function createRecipeCard(recipe) {
+            const stars = generateStars(recipe.averageRating || 0);
+            const ratingCount = recipe.ratingCount || 0;
+            const avgRating = recipe.averageRating ? recipe.averageRating.toFixed(1) : '0.0';
+            
+            return `
+                <div class="recipe-card" data-recipe-id="${recipe.id}">
                     <div class="recipe-header">
-                        <h3>${escapeHtml(recipe.name)}</h3>
-                        <span class="recipe-cuisine">${escapeHtml(recipe.cuisineType || 'Various')}</span>
+                        <h3>${recipe.name}</h3>
+                        <span class="recipe-cuisine">${recipe.cuisineType || 'Unknown'}</span>
                     </div>
                     <div class="recipe-body">
                         <div class="recipe-meta">
-                            <span>⏱️ ${(recipe.prepTime || 0) + (recipe.cookTime || 0)} min</span>
-                            <span>👥 ${recipe.servings || 0} servings</span>
+                            <span>⏱️ ${recipe.prepTime + recipe.cookTime} min</span>
+                            <span class="difficulty ${(recipe.difficultyLevel || '').toLowerCase()}">${recipe.difficultyLevel}</span>
                         </div>
-                        <p class="recipe-description">${escapeHtml(recipe.description || 'No description available')}</p>
+                        <p class="recipe-description">${recipe.description || 'No description available'}</p>
                         <div class="recipe-footer">
-                            <span class="difficulty ${(recipe.difficultyLevel || 'Easy').toLowerCase()}">${escapeHtml(recipe.difficultyLevel || 'Easy')}</span>
+                            <span class="servings">🍽️ ${recipe.servings} servings</span>
                         </div>
-                        <div class="rating-section">
-                            <div class="rating-display">
-                                <div class="stars">
-                                    ${generateStarDisplay(recipe.averageRating || 0)}
-                                </div>
-                                <span class="rating-info">${formatRating(recipe.averageRating || 0)} (${recipe.ratingCount || 0} ratings)</span>
+                        <div class="recipe-rating">
+                            <div class="stars">${stars}</div>
+                            <span class="rating-info">${avgRating} stars (${ratingCount} ratings)</span>
+                            <button class="rate-button" data-recipe-id="${recipe.id}">Rate</button>
+                        </div>
+                        <div class="rating-widget" id="rating-widget-${recipe.id}">
+                            <div class="rating-widget-title">Rate this recipe:</div>
+                            <div class="interactive-stars" data-recipe-id="${recipe.id}">
+                                <span class="interactive-star" data-value="1">★</span>
+                                <span class="interactive-star" data-value="2">★</span>
+                                <span class="interactive-star" data-value="3">★</span>
+                                <span class="interactive-star" data-value="4">★</span>
+                                <span class="interactive-star" data-value="5">★</span>
                             </div>
-                            <button class="rate-button" onclick="showRatingWidget(${recipe.id})">Rate this recipe</button>
-                            <div id="rating-widget-${recipe.id}" class="rating-widget">
-                                <div class="rating-widget-title">Select your rating:</div>
-                                <div class="rating-stars" id="rating-stars-${recipe.id}">
-                                    ${[1, 2, 3, 4, 5].map(star => 
-                                        `<span class="rating-star" data-rating="${star}" onclick="submitRating(${recipe.id}, ${star})" 
-                                         onmouseover="highlightStars(${recipe.id}, ${star})" 
-                                         onmouseout="resetStars(${recipe.id})">★</span>`
-                                    ).join('')}
-                                </div>
+                            <div class="rating-actions">
+                                <button class="submit-rating" data-recipe-id="${recipe.id}" disabled>Submit</button>
+                                <button class="cancel-rating" data-recipe-id="${recipe.id}">Cancel</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
         }
         
-        // Generate star display for average rating
-        function generateStarDisplay(rating) {
-            const fullStars = Math.round(rating); // Round to nearest whole star
-            const emptyStars = 5 - fullStars;
-            
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
             let stars = '';
-            for (let i = 0; i < fullStars; i++) {
-                stars += '<span class="star filled">★</span>';
+            
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    stars += '<span class="star filled">★</span>';
+                } else if (i === fullStars && hasHalfStar) {
+                    stars += '<span class="star filled">★</span>';
+                } else {
+                    stars += '<span class="star">★</span>';
+                }
             }
-            for (let i = 0; i < emptyStars; i++) {
-                stars += '<span class="star">★</span>';
-            }
+            
             return stars;
         }
         
-        // Format rating to one decimal place
-        function formatRating(rating) {
-            return rating.toFixed(1) + ' stars';
-        }
-        
-        // Show rating widget
         function showRatingWidget(recipeId) {
+            // Hide all other rating widgets
+            document.querySelectorAll('.rating-widget').forEach(widget => {
+                widget.classList.remove('active');
+            });
+            
+            // Show this rating widget
             const widget = document.getElementById(`rating-widget-${recipeId}`);
-            widget.classList.toggle('active');
+            widget.classList.add('active');
+            
+            // Set up interactive stars
+            const stars = widget.querySelectorAll('.interactive-star');
+            const submitButton = widget.querySelector('.submit-rating');
+            const cancelButton = widget.querySelector('.cancel-rating');
+            let selectedRating = 0;
+            
+            stars.forEach(star => {
+                star.addEventListener('mouseenter', function() {
+                    const value = parseInt(this.dataset.value);
+                    highlightStars(stars, value);
+                });
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.value);
+                    stars.forEach(s => s.classList.remove('selected'));
+                    for (let i = 0; i < selectedRating; i++) {
+                        stars[i].classList.add('selected');
+                    }
+                    submitButton.disabled = false;
+                });
+            });
+            
+            widget.addEventListener('mouseleave', function() {
+                if (selectedRating === 0) {
+                    stars.forEach(s => s.classList.remove('hover'));
+                }
+            });
+            
+            submitButton.addEventListener('click', async function() {
+                if (selectedRating > 0) {
+                    await submitRating(recipeId, selectedRating);
+                }
+            });
+            
+            cancelButton.addEventListener('click', function() {
+                widget.classList.remove('active');
+                selectedRating = 0;
+                stars.forEach(s => {
+                    s.classList.remove('selected', 'hover');
+                });
+                submitButton.disabled = true;
+            });
         }
         
-        // Highlight stars on hover
-        function highlightStars(recipeId, rating) {
-            const stars = document.querySelectorAll(`#rating-stars-${recipeId} .rating-star`);
+        function highlightStars(stars, value) {
             stars.forEach((star, index) => {
-                if (index < rating) {
+                if (index < value) {
                     star.classList.add('hover');
                 } else {
                     star.classList.remove('hover');
@@ -454,13 +655,6 @@
             });
         }
         
-        // Reset star highlighting
-        function resetStars(recipeId) {
-            const stars = document.querySelectorAll(`#rating-stars-${recipeId} .rating-star`);
-            stars.forEach(star => star.classList.remove('hover'));
-        }
-        
-        // Submit rating to API
         async function submitRating(recipeId, rating) {
             try {
                 const response = await fetch(`/api/recipes/${recipeId}/rate`, {
@@ -477,21 +671,23 @@
                 
                 const updatedRecipe = await response.json();
                 
-                // Update the recipe in the local array
-                const recipeIndex = recipes.findIndex(r => r.id === recipeId);
-                if (recipeIndex !== -1) {
-                    recipes[recipeIndex] = updatedRecipe;
+                // Hide the rating widget
+                document.getElementById(`rating-widget-${recipeId}`).classList.remove('active');
+                
+                // Update the recipe in the allRecipes array
+                const index = allRecipes.findIndex(r => r.id === recipeId);
+                if (index !== -1) {
+                    allRecipes[index] = updatedRecipe;
                 }
                 
-                // Refresh display
-                const filters = getActiveFilters();
-                displayRecipes(filterRecipes(recipes, filters));
+                // Re-display recipes to show updated rating
+                filterRecipes();
                 
-                // Show success message briefly
+                // Show success message
                 showSuccessMessage('Rating submitted successfully!');
             } catch (error) {
                 console.error('Error submitting rating:', error);
-                showErrorMessage('Unable to submit rating. Please try again.');
+                showError('Failed to submit rating. Please try again.');
             }
         }
         
@@ -566,13 +762,52 @@
             return div.innerHTML;
         }
         
-        // Add event listeners for filters
-        document.getElementById('difficulty').addEventListener('change', applyFilters);
-        document.getElementById('cuisine').addEventListener('change', applyFilters);
-        document.getElementById('search').addEventListener('input', applyFilters);
+ex !== -1) {
+                    allRecipes[index] = updatedRecipe;
+                }
+                
+                // Re-display recipes to show updated rating
+                filterRecipes();
+                
+                // Show success message
+                showSuccessMessage('Rating submitted successfully!');
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showError('Failed to submit rating. Please try again.');
+            }
+        }
         
-        // Load recipes on page load
-        fetchRecipes();
+        function filterRecipes() {
+            const difficulty = document.getElementById('difficulty').value;
+            const cuisine = document.getElementById('cuisine').value;
+            const search = document.getElementById('search').value.toLowerCase();
+            
+            const filtered = allRecipes.filter(recipe => {
+                const matchesDifficulty = !difficulty || recipe.difficultyLevel === difficulty;
+                const matchesCuisine = !cuisine || recipe.cuisineType === cuisine;
+                const matchesSearch = !search || recipe.name.toLowerCase().includes(search) || 
+                                     (recipe.description && recipe.description.toLowerCase().includes(search));
+                
+                return matchesDifficulty && matchesCuisine && matchesSearch;
+            });
+            
+            displayRecipes(filtered);
+        }
+        
+        function showError(message) {
+            // Simple alert for now, could be replaced with a toast notification
+            alert(message);
+        }
+        
+        function showError(message) {
+            // Simple alert for now, could be replaced with a toast notification
+            alert(message);
+        }
+        
+        function showSuccessMessage(message) {
+            // Simple alert for now, could be replaced with a toast notification
+            alert(message);
+        }
     </script>
 </body>
 </html>

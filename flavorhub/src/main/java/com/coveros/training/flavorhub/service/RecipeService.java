@@ -51,16 +51,18 @@ public class RecipeService {
      * Add a rating to a recipe and update the average rating
      * 
      * @param recipeId the ID of the recipe to rate
-     * @param rating the rating value (1-5)
-     * @return the updated Recipe with new average rating
+     * @param rating the rating value (must be between 1 and 5)
+     * @return the updated recipe with new average rating
      * @throws IllegalArgumentException if rating is not between 1 and 5
      * @throws RuntimeException if recipe is not found
      */
     public Recipe addRating(Long recipeId, Integer rating) {
+        // Validate rating is between 1 and 5
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
         
+        // Find the recipe
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found with id: " + recipeId));
         
@@ -70,9 +72,11 @@ public class RecipeService {
         
         Double newAverage = ((currentAverage * currentCount) + rating) / (currentCount + 1);
         
+        // Update recipe with new rating
         recipe.setAverageRating(newAverage);
         recipe.setRatingCount(currentCount + 1);
         
+        // Save and return updated recipe
         return recipeRepository.save(recipe);
     }
     

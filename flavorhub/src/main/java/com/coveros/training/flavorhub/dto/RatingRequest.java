@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for submitting a recipe rating
+ * Data Transfer Object for recipe rating requests
  */
 @Data
 @NoArgsConstructor
