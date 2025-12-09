@@ -171,7 +171,7 @@
                 
                 <div class="feature-card">
                     <h3>📖 Recipe Browser</h3>
-                    <p>Browse through a collection of recipes with detailed instructions</p>
+                    <p>Browse through a collection of recipes with detailed instructions and rate your favorites!</p>
                     <a href="/recipes" style="display: inline-block; margin-top: 10px; color: #667eea; text-decoration: none; font-weight: 500;">Browse Recipes →</a>
                 </div>
                 
@@ -220,6 +220,10 @@
                     <div class="endpoint">
                         <span class="method delete">DELETE</span>
                         <code>/api/pantry/{id}</code> - Remove pantry item
+                    </div>
+                    <div class="endpoint">
+                        <span class="method put">PUT</span>
+                        <code>/api/recipes/{id}/rate</code> - Rate a recipe (1-5 stars)
                     </div>
                 </div>
             </div>
