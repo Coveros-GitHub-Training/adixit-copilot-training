@@ -385,8 +385,8 @@
                     </div>
                     <div class="recipe-body">
                         <div class="recipe-meta">
-                            <span>⏱️ ${recipe.prepTime + recipe.cookTime} min</span>
-                            <span>👥 ${recipe.servings} servings</span>
+                            <span>⏱️ ${(recipe.prepTime || 0) + (recipe.cookTime || 0)} min</span>
+                            <span>👥 ${recipe.servings || 0} servings</span>
                         </div>
                         <p class="recipe-description">${escapeHtml(recipe.description || 'No description available')}</p>
                         <div class="recipe-footer">
@@ -418,15 +418,11 @@
         
         // Generate star display for average rating
         function generateStarDisplay(rating) {
-            const fullStars = Math.floor(rating);
-            const hasHalfStar = rating % 1 >= 0.5;
-            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            const fullStars = Math.round(rating); // Round to nearest whole star
+            const emptyStars = 5 - fullStars;
             
             let stars = '';
             for (let i = 0; i < fullStars; i++) {
-                stars += '<span class="star filled">★</span>';
-            }
-            if (hasHalfStar) {
                 stars += '<span class="star filled">★</span>';
             }
             for (let i = 0; i < emptyStars; i++) {

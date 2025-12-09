@@ -64,9 +64,9 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found with id: " + recipeId));
         
-        // Calculate new average rating
-        Double currentAverage = recipe.getAverageRating();
-        Integer currentCount = recipe.getRatingCount();
+        // Calculate new average rating - handle null values for existing recipes
+        Double currentAverage = recipe.getAverageRating() != null ? recipe.getAverageRating() : 0.0;
+        Integer currentCount = recipe.getRatingCount() != null ? recipe.getRatingCount() : 0;
         
         Double newAverage = ((currentAverage * currentCount) + rating) / (currentCount + 1);
         
