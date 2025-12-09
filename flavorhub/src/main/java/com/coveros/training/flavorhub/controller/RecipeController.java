@@ -1,5 +1,6 @@
 package com.coveros.training.flavorhub.controller;
 
+import com.coveros.training.flavorhub.dto.RatingRequest;
 import com.coveros.training.flavorhub.model.Recipe;
 import com.coveros.training.flavorhub.service.RecipeService;
 import lombok.RequiredArgsConstructor;
@@ -81,5 +82,26 @@ public class RecipeController {
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    /**
+     * Add a rating to a recipe
+     * 
+     * @param id the ID of the recipe to rate
+     * @param ratingRequest the rating request containing the rating value (1-5)
+     * @return the updated recipe with new average rating
+     */
+    @PutMapping("/{id}/rate")
+    public ResponseEntity<Recipe> rateRecipe(
+            @PathVariable Long id,
+            @Valid @RequestBody RatingRequest ratingRequest) {
+        try {
+            Recipe updatedRecipe = recipeService.addRating(id, ratingRequest.getRating());
+            return ResponseEntity.ok(updatedRecipe);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

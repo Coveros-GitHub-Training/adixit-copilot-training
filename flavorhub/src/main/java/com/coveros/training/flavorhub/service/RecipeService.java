@@ -48,6 +48,35 @@ public class RecipeService {
     }
     
     /**
+     * Add a rating to a recipe and update the average rating
+     * 
+     * @param recipeId the ID of the recipe to rate
+     * @param rating the rating value (1-5)
+     * @return the updated Recipe with new average rating
+     * @throws IllegalArgumentException if rating is not between 1 and 5
+     * @throws RuntimeException if recipe is not found
+     */
+    public Recipe addRating(Long recipeId, Integer rating) {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
+        
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new RuntimeException("Recipe not found with id: " + recipeId));
+        
+        // Calculate new average rating - handle null values for existing recipes
+        Double currentAverage = recipe.getAverageRating() != null ? recipe.getAverageRating() : 0.0;
+        Integer currentCount = recipe.getRatingCount() != null ? recipe.getRatingCount() : 0;
+        
+        Double newAverage = ((currentAverage * currentCount) + rating) / (currentCount + 1);
+        
+        recipe.setAverageRating(newAverage);
+        recipe.setRatingCount(currentCount + 1);
+        
+        return recipeRepository.save(recipe);
+    }
+    
+    /**
      * Find recipes that can be made based on available ingredients in the pantry
      * NOTE: This method is intentionally left incomplete for workshop participants
      * Participants will use GitHub Copilot to implement this recommendation logic
