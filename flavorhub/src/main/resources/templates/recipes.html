@@ -191,6 +191,111 @@
             color: #667eea;
             margin-bottom: 10px;
         }
+        
+        .rating-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .stars {
+            display: inline-flex;
+            gap: 2px;
+            font-size: 1.2em;
+        }
+        
+        .star {
+            color: #ddd;
+        }
+        
+        .star.filled {
+            color: #667eea;
+        }
+        
+        .rating-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .rate-button {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border: 1px solid #667eea;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .rate-button:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .rating-widget {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .rating-widget.active {
+            display: block;
+        }
+        
+        .rating-widget-title {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .rating-star {
+            font-size: 2em;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.2s;
+        }
+        
+        .rating-star:hover,
+        .rating-star.hover {
+            color: #667eea;
+        }
+        
+        .rating-star.selected {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .rating-display {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
@@ -241,9 +346,237 @@
     </div>
     
     <script>
-        // TODO: Add JavaScript to fetch and display recipes from API
-        // TODO: Implement filtering functionality
-        // TODO: Add search functionality
+        let recipes = [];
+        
+        // Fetch recipes from API
+        async function fetchRecipes() {
+            try {
+                const response = await fetch('/api/recipes');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recipes');
+                }
+                recipes = await response.json();
+                displayRecipes(recipes);
+            } catch (error) {
+                console.error('Error loading recipes:', error);
+                showErrorMessage('Unable to load recipes. Please try again.');
+            }
+        }
+        
+        // Display recipes in the grid
+        function displayRecipes(recipesToDisplay) {
+            const grid = document.getElementById('recipesGrid');
+            
+            if (recipesToDisplay.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-recipes">
+                        <h2>No Recipes Found</h2>
+                        <p>Try adjusting your filters or check back later!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = recipesToDisplay.map(recipe => `
+                <div class="recipe-card">
+                    <div class="recipe-header">
+                        <h3>${escapeHtml(recipe.name)}</h3>
+                        <span class="recipe-cuisine">${escapeHtml(recipe.cuisineType || 'Various')}</span>
+                    </div>
+                    <div class="recipe-body">
+                        <div class="recipe-meta">
+                            <span>⏱️ ${recipe.prepTime + recipe.cookTime} min</span>
+                            <span>👥 ${recipe.servings} servings</span>
+                        </div>
+                        <p class="recipe-description">${escapeHtml(recipe.description || 'No description available')}</p>
+                        <div class="recipe-footer">
+                            <span class="difficulty ${(recipe.difficultyLevel || 'Easy').toLowerCase()}">${escapeHtml(recipe.difficultyLevel || 'Easy')}</span>
+                        </div>
+                        <div class="rating-section">
+                            <div class="rating-display">
+                                <div class="stars">
+                                    ${generateStarDisplay(recipe.averageRating || 0)}
+                                </div>
+                                <span class="rating-info">${formatRating(recipe.averageRating || 0)} (${recipe.ratingCount || 0} ratings)</span>
+                            </div>
+                            <button class="rate-button" onclick="showRatingWidget(${recipe.id})">Rate this recipe</button>
+                            <div id="rating-widget-${recipe.id}" class="rating-widget">
+                                <div class="rating-widget-title">Select your rating:</div>
+                                <div class="rating-stars" id="rating-stars-${recipe.id}">
+                                    ${[1, 2, 3, 4, 5].map(star => 
+                                        `<span class="rating-star" data-rating="${star}" onclick="submitRating(${recipe.id}, ${star})" 
+                                         onmouseover="highlightStars(${recipe.id}, ${star})" 
+                                         onmouseout="resetStars(${recipe.id})">★</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Generate star display for average rating
+        function generateStarDisplay(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            
+            let stars = '';
+            for (let i = 0; i < fullStars; i++) {
+                stars += '<span class="star filled">★</span>';
+            }
+            if (hasHalfStar) {
+                stars += '<span class="star filled">★</span>';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                stars += '<span class="star">★</span>';
+            }
+            return stars;
+        }
+        
+        // Format rating to one decimal place
+        function formatRating(rating) {
+            return rating.toFixed(1) + ' stars';
+        }
+        
+        // Show rating widget
+        function showRatingWidget(recipeId) {
+            const widget = document.getElementById(`rating-widget-${recipeId}`);
+            widget.classList.toggle('active');
+        }
+        
+        // Highlight stars on hover
+        function highlightStars(recipeId, rating) {
+            const stars = document.querySelectorAll(`#rating-stars-${recipeId} .rating-star`);
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('hover');
+                } else {
+                    star.classList.remove('hover');
+                }
+            });
+        }
+        
+        // Reset star highlighting
+        function resetStars(recipeId) {
+            const stars = document.querySelectorAll(`#rating-stars-${recipeId} .rating-star`);
+            stars.forEach(star => star.classList.remove('hover'));
+        }
+        
+        // Submit rating to API
+        async function submitRating(recipeId, rating) {
+            try {
+                const response = await fetch(`/api/recipes/${recipeId}/rate`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rating: rating })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit rating');
+                }
+                
+                const updatedRecipe = await response.json();
+                
+                // Update the recipe in the local array
+                const recipeIndex = recipes.findIndex(r => r.id === recipeId);
+                if (recipeIndex !== -1) {
+                    recipes[recipeIndex] = updatedRecipe;
+                }
+                
+                // Refresh display
+                const filters = getActiveFilters();
+                displayRecipes(filterRecipes(recipes, filters));
+                
+                // Show success message briefly
+                showSuccessMessage('Rating submitted successfully!');
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showErrorMessage('Unable to submit rating. Please try again.');
+            }
+        }
+        
+        // Get active filters
+        function getActiveFilters() {
+            return {
+                difficulty: document.getElementById('difficulty').value,
+                cuisine: document.getElementById('cuisine').value,
+                search: document.getElementById('search').value.toLowerCase()
+            };
+        }
+        
+        // Filter recipes based on criteria
+        function filterRecipes(recipesToFilter, filters) {
+            return recipesToFilter.filter(recipe => {
+                const matchesDifficulty = !filters.difficulty || recipe.difficultyLevel === filters.difficulty;
+                const matchesCuisine = !filters.cuisine || recipe.cuisineType === filters.cuisine;
+                const matchesSearch = !filters.search || 
+                    recipe.name.toLowerCase().includes(filters.search) ||
+                    (recipe.description && recipe.description.toLowerCase().includes(filters.search));
+                
+                return matchesDifficulty && matchesCuisine && matchesSearch;
+            });
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const filters = getActiveFilters();
+            const filtered = filterRecipes(recipes, filters);
+            displayRecipes(filtered);
+        }
+        
+        // Show error message
+        function showErrorMessage(message) {
+            const grid = document.getElementById('recipesGrid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'no-recipes';
+            errorDiv.innerHTML = `
+                <h2>⚠️ Error</h2>
+                <p>${escapeHtml(message)}</p>
+            `;
+            grid.innerHTML = '';
+            grid.appendChild(errorDiv);
+        }
+        
+        // Show success message
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1000;
+            `;
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Add event listeners for filters
+        document.getElementById('difficulty').addEventListener('change', applyFilters);
+        document.getElementById('cuisine').addEventListener('change', applyFilters);
+        document.getElementById('search').addEventListener('input', applyFilters);
+        
+        // Load recipes on page load
+        fetchRecipes();
     </script>
 </body>
 </html>
